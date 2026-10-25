@@ -163,13 +163,13 @@ Other settings (GPIOs, debounce, delays, max hold, remote wakeup, VID/PID/string
 
 ## Acceptance tests (SPEC.md §8)
 
-**Status: built only, not yet run on hardware.** `idf.py build` passes with zero warnings on
-IDF 5.5.4 (production and debug variants), and each `ptt_config.h` validation was checked to fail the
-build as intended. Tests 1–6 need the board and a Mac:
+**Status: flashed and enumerating; tests 2–6 not yet run.** `idf.py build` passes with zero warnings
+on IDF 5.5.4 (production and debug variants), and each `ptt_config.h` validation was checked to fail the
+build as intended. Test 1 passes on a Lolin S2 mini. Tests 2–6 need someone pressing the button:
 
 | # | Test | How |
 |---|---|---|
-| 1 | Enumeration | `system_profiler SPUSBDataType \| grep -A8 "PTT Button"`: Vendor ID 0x303a, Product ID 0x4001, Manufacturer "DIY" |
+| 1 | Enumeration ✅ | `ioreg -p IOUSB -l -n "PTT Button" \| grep -E 'idVendor\|idProduct\|USB Vendor Name'`: idVendor 12346 (0x303A), idProduct 16385 (0x4001), vendor "DIY". (On current macOS, `system_profiler SPUSBDataType` did not list the device.) |
 | 2 | Ordering | Karabiner-EventViewer: hold the button, expect `left_control` down then `grave_accent_and_tilde` down about 10 ms apart. Release: grave up, then control up |
 | 3 | Max hold | Hold for 130 s; the chord releases at 120 s and the LED goes off |
 | 4 | Unplug while held | Unplug while holding, replug while still holding: no stuck Ctrl, no chord on replug |
