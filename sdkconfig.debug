@@ -1,0 +1,6 @@
+# Debug overlay: UART0 console (TX = GPIO43) with INFO logging.
+# Use: idf.py -B build-debug -D SDKCONFIG=sdkconfig.dbg \
+#        -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.debug" build
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_BOOTLOADER_LOG_LEVEL_INFO=y

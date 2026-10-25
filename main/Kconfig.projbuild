@@ -1,0 +1,90 @@
+menu "PTT Controller"
+
+    menu "Hardware"
+        config PTT_BUTTON_GPIO
+            int "Button GPIO"
+            range 1 46
+            default 5
+            help
+                GPIO the push-to-talk button is wired to. GPIO0 (boot strap),
+                GPIO19/20 (USB D-/D+) and GPIO26-32 (in-package flash/PSRAM)
+                are rejected at compile time.
+
+        config PTT_BUTTON_ACTIVE_LOW
+            bool "Button is active low (GPIO to GND, internal pull-up)"
+            default y
+            help
+                If n, the button is active high and the internal pull-down is used.
+
+        config PTT_LED_GPIO
+            int "Status LED GPIO (-1 to disable)"
+            range -1 45
+            default 15
+            help
+                LED lit while the chord is held. GPIO15 is the onboard LED on
+                the Lolin S2 mini (active high).
+    endmenu
+
+    menu "Timing"
+        config PTT_DEBOUNCE_MS
+            int "Debounce time (ms)"
+            range 1 200
+            default 20
+            help
+                Stable-state time required before a button edge is accepted.
+
+        config PTT_MOD_TO_KEY_DELAY_MS
+            int "Press: modifier-to-key delay (ms)"
+            range 0 100
+            default 10
+            help
+                On press, a modifier-only report is sent, then this delay,
+                then the modifier+key report.
+
+        config PTT_KEY_TO_MOD_DELAY_MS
+            int "Release: key-to-modifier delay (ms)"
+            range 0 100
+            default 10
+            help
+                On release, a modifier-only report (key up) is sent, then this
+                delay, then the all-zero report.
+
+        config PTT_MAX_HOLD_S
+            int "Maximum hold time (s, 0 = unlimited)"
+            range 0 3600
+            default 120
+            help
+                Safety: force-release the chord if the button is held longer
+                than this. The button must be released and pressed again to
+                re-trigger.
+    endmenu
+
+    menu "USB"
+        config PTT_REMOTE_WAKEUP
+            bool "Wake a suspended host on button press"
+            default n
+            help
+                Advertise remote wakeup in the configuration descriptor and
+                call tinyusb_remote_wakeup() when the button is pressed while
+                the host has suspended the bus.
+
+        config PTT_USB_VID
+            hex "USB Vendor ID"
+            range 0x0001 0xFFFF
+            default 0x303A
+
+        config PTT_USB_PID
+            hex "USB Product ID"
+            range 0x0001 0xFFFF
+            default 0x4001
+
+        config PTT_USB_MANUFACTURER
+            string "Manufacturer string (max 31 chars)"
+            default "DIY"
+
+        config PTT_USB_PRODUCT
+            string "Product string (max 31 chars)"
+            default "PTT Button"
+    endmenu
+
+endmenu

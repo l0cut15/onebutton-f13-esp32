@@ -1,0 +1,6 @@
+## IDF Component Manager Manifest File
+dependencies:
+  idf: "5.5.4"
+  # Pinned exactly: the esp_tinyusb API changed between 1.x and 2.x.
+  # All calls in ptt_hid.c were checked against this version's headers.
+  espressif/esp_tinyusb: "==2.4.0"

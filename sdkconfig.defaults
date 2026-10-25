@@ -1,0 +1,20 @@
+# Production defaults. Debug build: see sdkconfig.debug and README.md.
+CONFIG_IDF_TARGET="esp32s2"
+
+# Lolin S2 mini: ESP32-S2FN4R2, 4 MB in-package flash
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# 1 ms tick so the ms-level debounce and chord delays are exact
+CONFIG_FREERTOS_HZ=1000
+
+# TinyUSB: one HID interface, nothing else. USB is owned by this firmware.
+CONFIG_TINYUSB_HID_COUNT=1
+CONFIG_TINYUSB_CDC_ENABLED=n
+CONFIG_TINYUSB_MSC_ENABLED=n
+CONFIG_TINYUSB_SUSPEND_CALLBACK=y
+CONFIG_TINYUSB_RESUME_CALLBACK=y
+
+# No console at all in production
+CONFIG_ESP_CONSOLE_NONE=y
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
