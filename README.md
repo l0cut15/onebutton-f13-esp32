@@ -197,3 +197,8 @@ build as intended. Test 1 passes on a Lolin S2 mini. Tests 2–6 need someone pr
   sending the chord. If it does not resume, the press is dropped.
 - **String length**: esp_tinyusb truncates string descriptors to 31 characters. The build rejects
   longer manufacturer/product strings.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The esp_tinyusb and TinyUSB components fetched at build time are
+licensed separately (Apache-2.0 and MIT respectively).
