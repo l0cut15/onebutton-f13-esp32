@@ -1,8 +1,8 @@
-# Spec: One-Button USB HID Push-to-Talk Controller (ESP32-S2 mini)
+# Spec: OneButton F13, one-button USB HID key (ESP32-S2 mini)
 
 ## 1. Goal
 
-A single physical button on an ESP32-S2 mini (Wemos/Lolin S2 mini) that enumerates over native USB as a HID keyboard. While the button is held, the device holds a configurable key chord (default: Left Ctrl + ` [grave]). On release, it releases the chord. The macOS host dictation app starts recording on chord-down and processes the dictation on chord-up.
+A single physical button on an ESP32-S2 mini (Wemos/Lolin S2 mini) that enumerates over native USB as a HID keyboard. While the button is held, the device holds a configurable key chord (default: F13, no modifier). On release, it releases the chord. A typical use is push-to-talk: the host app starts recording on key-down and processes on key-up.
 
 This is **hold semantics, not tap**. The chord must stay asserted for the full duration of the button hold.
 
@@ -30,9 +30,9 @@ This is **hold semantics, not tap**. The chord must stay asserted for the full d
 
 ```c
 // Modifier bitmask: use TinyUSB KEYBOARD_MODIFIER_* constants
-#define PTT_MODIFIERS   (KEYBOARD_MODIFIER_LEFTCTRL)
+#define PTT_MODIFIERS   (0)
 // Up to 6 non-modifier HID usage IDs, zero-terminated
-#define PTT_KEYS        { HID_KEY_GRAVE, 0, 0, 0, 0, 0 }
+#define PTT_KEYS        { HID_KEY_F13, 0, 0, 0, 0, 0 }
 ```
 
 Compile-time validation: at most 6 keys, no modifier usage IDs (0xE0 to 0xE7) in `PTT_KEYS`, at least one modifier or key set. Fail the build with `static_assert` and a readable message otherwise.
@@ -46,7 +46,7 @@ Compile-time validation: at most 6 keys, no modifier usage IDs (0xE0 to 0xE7) in
 | `PTT_KEY_TO_MOD_DELAY_MS` | 10 | On release: send modifier-only report (key up), wait, then send empty report |
 | `PTT_MAX_HOLD_S` | 120 | Safety: force-release if held longer than this. 0 disables |
 | `PTT_REMOTE_WAKEUP` | n | If y, a press while the host is suspended calls `tud_remote_wakeup()` |
-| `PTT_USB_VID/PID/MANUFACTURER/PRODUCT` | 0x303A / 0x4001 / "DIY" / "PTT Button" | Descriptor strings |
+| `PTT_USB_VID/PID/MANUFACTURER/PRODUCT` | 0x303A / 0x4001 / "DIY" / "OneButton F13" | Descriptor strings |
 
 ## 5. Behavior (state machine)
 
@@ -88,8 +88,8 @@ States: `IDLE`, `HELD`.
 
 Host-side checks on macOS after flashing:
 
-1. `system_profiler SPUSBDataType | grep -A8 "PTT Button"` shows the device with the configured VID/PID and strings.
-2. Open Karabiner-EventViewer, or any browser key-tester page. Press and hold the button: Left Ctrl down, then grave down, ordered, with about 10 ms between them. Release: grave up, then Ctrl up. No repeat events beyond the host's normal key repeat for the grave key.
+1. `system_profiler SPUSBDataType | grep -A8 "OneButton F13"` shows the device with the configured VID/PID and strings.
+2. Open Karabiner-EventViewer, or any browser key-tester page. Press and hold the button: F13 down; release: F13 up. With a modifier chord configured (e.g. Left Ctrl + grave): modifier down, then key down about 10 ms later; on release, key up, then modifier up.
 3. Hold 130 s (with default `PTT_MAX_HOLD_S=120`): chord auto-releases at 120 s.
 4. Unplug USB while held, replug: no stuck modifier on the host, no chord sent on replug while the button is still held.
 5. Bounce test: tap the button very quickly 20 times: every press produces exactly one down/up pair, no orphaned keys.

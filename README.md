@@ -1,13 +1,15 @@
-# OneButton: USB push-to-talk button (ESP32-S2 mini)
+# OneButton F13: one-button F13 key for ESP32-S2
 
-A single physical button for push-to-talk dictation. A Lolin/Wemos S2 mini shows up over USB as a
-standard keyboard. While the button is **held**, it holds a key chord (default **Left Ctrl + `**).
-When it is released, the chord is released. There is no driver and no host software to install.
+A single physical key that sends **F13**. A Lolin/Wemos S2 mini shows up over USB as a standard
+keyboard. While the button is **held**, F13 is held down; when it is released, F13 is released. There
+is no driver and no host software to install.
 
-It works with any app that has a push-to-talk or "hold to record" shortcut.
+Mac keyboards have no F13 key and macOS binds nothing to it, so it never clashes with an existing
+shortcut. Bind it to anything that accepts a shortcut, for example push-to-talk or "hold to record"
+in a dictation or voice chat app. The key can be changed to any other key or chord.
 
 - Firmware: ESP-IDF 5.5.4, C, `espressif/esp_tinyusb` 2.4.0
-- Prebuilt firmware: [firmware/onebutton-esp32-s2-mini.bin](firmware/onebutton-esp32-s2-mini.bin) ([flash it without ESP-IDF](#flash-the-prebuilt-firmware))
+- Prebuilt firmware: [firmware/onebutton-f13-esp32-s2.bin](firmware/onebutton-f13-esp32-s2.bin) ([flash it without ESP-IDF](#flash-the-prebuilt-firmware))
 - Case: 3D printed, four parts, no screws ([details](#case))
 - Design notes: [SPEC.md](SPEC.md) (firmware), [_Case/OneButton_design_spec.md](_Case/OneButton_design_spec.md) (case)
 
@@ -32,7 +34,7 @@ It works with any app that has a push-to-talk or "hold to record" shortcut.
          |                   |      |
          |  GND    o---------+------'
          |                   |
-         |  GPIO15 = onboard LED (lit while the chord is held)
+         |  GPIO15 = onboard LED (lit while the key is held)
          |                   |
          +------[USB-C]------+
                    |
@@ -45,8 +47,8 @@ Pins that cannot work (GPIO0, the USB pins 19/20, the flash pins 26–32) are re
 
 ## Flash the prebuilt firmware
 
-[firmware/onebutton-esp32-s2-mini.bin](firmware/onebutton-esp32-s2-mini.bin) is a ready-made image
-with the default settings: button on **GPIO17**, LED on GPIO15, chord **Left Ctrl + `**. It is a single
+[firmware/onebutton-f13-esp32-s2.bin](firmware/onebutton-f13-esp32-s2.bin) is a ready-made image
+with the default settings: button on **GPIO17**, LED on GPIO15, key **F13**. It is a single
 merged file (bootloader, partition table and app) written at offset **0x0**. No ESP-IDF install is
 needed.
 
@@ -54,16 +56,16 @@ needed.
 2. Open the [Espressif web flasher](https://espressif.github.io/esptool-js/) in Chrome or Edge
    (it needs Web Serial, which Safari and Firefox do not support).
 3. Click **Connect** and pick the board's serial port.
-4. Set **Flash Address** to `0x0`, choose `onebutton-esp32-s2-mini.bin`, and click **Program**.
-5. When it finishes, tap **RST**. The board restarts as a keyboard named "PTT Button".
+4. Set **Flash Address** to `0x0`, choose `onebutton-f13-esp32-s2.bin`, and click **Program**.
+5. When it finishes, tap **RST**. The board restarts as a keyboard named "OneButton F13".
 
 Or from a terminal, with Python's esptool (`pip install esptool`):
 
 ```bash
-esptool.py --chip esp32s2 write_flash 0x0 firmware/onebutton-esp32-s2-mini.bin
+esptool.py --chip esp32s2 write_flash 0x0 firmware/onebutton-f13-esp32-s2.bin
 ```
 
-To change the button pin or the chord, build from source instead.
+To change the button pin or the key, build from source instead.
 
 ## Build and flash from source
 
@@ -82,31 +84,27 @@ download mode by hand each time you flash:
    idf.py -p /dev/cu.usbmodem* flash
    ```
    If more than one port is listed (`ls /dev/cu.usbmodem*`), use the one that just appeared.
-3. Tap **RST**. The board restarts as a keyboard named "PTT Button".
+3. Tap **RST**. The board restarts as a keyboard named "OneButton F13".
 
 In the case, **0** is reached through the window in the side wall and **RST** through the small hole
 on the other side, so the case does not need to be opened.
 
-## Set up your dictation app
+## Bind it in an app
 
 1. Plug in the button.
-2. In the app's settings, click the push-to-talk or "hold to record" shortcut field, then **press and
-   hold the button**. The app records the chord (default `⌃` + `` ` ``).
-3. Set the app to **hold** mode (record while held), not toggle.
+2. In the app's settings, click the shortcut field, then **press the button**. The app records F13.
+3. For push-to-talk, set the app to **hold** mode (active while held), not toggle.
 
 The first time it is plugged in, macOS may open **Keyboard Setup Assistant**. Close it; macOS
 remembers the device after that.
 
-## Changing the key chord
+## Changing the key
 
-The default `⌃` + `` ` `` also toggles the terminal in VS Code and some other editors. **F13 to F24**
-are a good alternative: Mac keyboards do not have them and macOS binds nothing to them.
-
-Edit `main/ptt_config.h`, then rebuild and flash:
+Edit `main/ptt_config.h`, then rebuild and flash. The default is F13 with no modifier:
 
 ```c
-#define PTT_MODIFIERS   (KEYBOARD_MODIFIER_LEFTCTRL)
-#define PTT_KEYS        { HID_KEY_GRAVE, 0, 0, 0, 0, 0 }
+#define PTT_MODIFIERS   (0)
+#define PTT_KEYS        { HID_KEY_F13, 0, 0, 0, 0, 0 }
 ```
 
 - `PTT_MODIFIERS`: OR together `KEYBOARD_MODIFIER_LEFTCTRL`, `_LEFTSHIFT`, `_LEFTALT` (Option),
@@ -117,9 +115,9 @@ Edit `main/ptt_config.h`, then rebuild and flash:
 The build stops with a clear message if the chord is invalid.
 
 ```c
-// F18 alone
-#define PTT_MODIFIERS   (0)
-#define PTT_KEYS        { HID_KEY_F18, 0, 0, 0, 0, 0 }
+// Left Ctrl + ` (grave)
+#define PTT_MODIFIERS   (KEYBOARD_MODIFIER_LEFTCTRL)
+#define PTT_KEYS        { HID_KEY_GRAVE, 0, 0, 0, 0, 0 }
 
 // Option + Space
 #define PTT_MODIFIERS   (KEYBOARD_MODIFIER_LEFTALT)
@@ -168,10 +166,10 @@ idf.py -B build-debug -D SDKCONFIG=sdkconfig.dbg \
 
 ## How it works
 
-On press, the firmware sends the modifier alone, waits a few milliseconds, then sends modifier + key, so
-apps see the keys in the order a person would press them. On release it does the reverse. The chord is
-also released if the USB host disconnects or sleeps, or after a maximum hold time (120 s by default),
-so a key can never get stuck down. The button is debounced in software. See [SPEC.md](SPEC.md) for the
+The firmware presses the key when the button goes down and releases it when the button comes up. If
+the chord includes a modifier, the modifier is pressed a few milliseconds before the key and released a
+few milliseconds after it, the way a person would type it. The key is also released if the USB host
+disconnects or sleeps, or after a maximum hold time (120 s by default), so it can never get stuck down. The button is debounced in software. See [SPEC.md](SPEC.md) for the
 full design.
 
 ## License

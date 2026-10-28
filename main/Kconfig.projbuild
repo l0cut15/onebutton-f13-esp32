@@ -84,7 +84,7 @@ menu "PTT Controller"
 
         config PTT_USB_PRODUCT
             string "Product string (max 31 chars)"
-            default "PTT Button"
+            default "OneButton F13"
     endmenu
 
 endmenu
