@@ -23,6 +23,17 @@ menu "OneButton"
             help
                 LED lit while the chord is held. GPIO15 is the onboard LED on
                 the Lolin S2 mini (active high).
+
+        config PTT_CONFIG_BUTTON_GPIO
+            int "Config button GPIO (-1 to disable config mode)"
+            range -1 46
+            default 0
+            help
+                Holding this button restarts the device as a USB drive with
+                CONFIG.TXT on it. Active low, internal pull-up. GPIO0 is the
+                onboard BOOT button: it is only read after boot, so holding it
+                at power-up still enters ROM download mode. -1 disables config
+                mode; CONFIG.TXT is still read at boot.
     endmenu
 
     menu "Timing"
@@ -56,7 +67,15 @@ menu "OneButton"
             help
                 Safety: force-release the chord if the button is held longer
                 than this. The button must be released and pressed again to
-                re-trigger.
+                re-trigger. CONFIG.TXT can override this (max_hold_s).
+
+        config PTT_CONFIG_HOLD_MS
+            int "Config button hold time (ms)"
+            range 200 10000
+            default 1000
+            help
+                How long the config button must be held to switch between
+                keyboard and config drive.
     endmenu
 
     menu "USB"
@@ -78,13 +97,24 @@ menu "OneButton"
             range 0x0001 0xFFFF
             default 0x4001
 
+        config PTT_USB_PID_CONFIG
+            hex "USB Product ID in config mode"
+            range 0x0001 0xFFFF
+            default 0x4002
+            help
+                The config drive uses its own PID: hosts cache the interface
+                set per VID/PID, so it must differ from the keyboard's.
+
         config PTT_USB_MANUFACTURER
             string "Manufacturer string (max 31 chars)"
             default "DIY"
 
         config PTT_USB_PRODUCT
-            string "Product string (max 31 chars)"
+            string "Product string (max 24 chars)"
             default "OneButton F13"
+            help
+                The config drive is named "<this> Config", so at most 24
+                characters fit esp_tinyusb's 31-character limit.
     endmenu
 
 endmenu

@@ -1,6 +1,6 @@
 # Spec v2: OneButton F13 with a config drive (ESP32-S2 mini)
 
-Status: draft, not implemented. Builds on [SPEC.md](SPEC.md) (v1). Everything in v1 still applies unless this file changes it. v1 section 9 lists runtime configuration as out of scope. v2 adds it.
+Status: implemented, not yet tested on hardware. Section 12 records what was checked in the esp_tinyusb 2.4.0 source. Builds on [SPEC.md](SPEC.md) (v1). Everything in v1 still applies unless this file changes it. v1 section 9 lists runtime configuration as out of scope. v2 adds it.
 
 ## 1. Goal
 
@@ -145,7 +145,7 @@ chord: F13
 
 ### 7.2 In config mode
 - Expose the volume to the host as MSC.
-- **Eject**: on SCSI START STOP UNIT with `LoEj = 1, Start = 0` (`tud_msc_start_stop_cb`), wait about 200 ms for the status phase to finish, then restart into `NORMAL`.
+- **Eject**: on SCSI START STOP UNIT with `LoEj = 1, Start = 0`, wait about 200 ms for the status phase to finish, then restart into `NORMAL`. esp_tinyusb owns `tud_msc_start_stop_cb`, so the eject is seen through its storage event callback (section 12).
 - **BOOT held again** for `PTT_CONFIG_HOLD_MS`: restart into `NORMAL`. The README must say to eject first. Otherwise macOS may not have written the file yet, and it shows a "Disk Not Ejected Properly" warning.
 - **Unplug**: next power-up is `NORMAL`. Same caveat about unwritten data.
 - There is no automatic timeout. A timeout could restart while the user is still editing.
@@ -200,9 +200,41 @@ v1 files stay. New and changed files:
 
 Live config without a restart, HID and MSC together in one composite device, a web or WebUSB config page, multiple chords or profiles, macros, OTA.
 
-## 12. Open items to verify, not guess
+## 12. Open items: findings
 
-- Whether macOS sends SCSI START STOP UNIT (LoEj) on Finder eject, and whether esp_tinyusb 2.4.0 already implements `tud_msc_start_stop_cb` itself (it may, for its own remount logic). If it does, hook its storage event callback instead. If macOS does not send eject, the BOOT button becomes the main exit path and the README changes to "eject, then press BOOT".
-- esp_tinyusb automatically remounts storage to the app when USB disconnects (`auto_mount_off` flag). Check that this does not race with the restart in section 7.2.
-- Minimum workable FAT size with wear levelling and 4 KB sectors. 1 MB is assumed to be comfortable. Confirm that the volume shows in Finder with a sensible free-space value.
-- Whether macOS keeps showing the Keyboard Setup Assistant once after the switch back from config mode. It should not, since the keyboard's VID/PID/serial are unchanged.
+Checked against the esp_tinyusb 2.4.0 and TinyUSB 0.21.0~2 sources (`managed_components/`) and ESP-IDF 5.5.4.
+
+**Eject callback.** esp_tinyusb defines `tud_msc_start_stop_cb` as a strong symbol in `tinyusb_msc.c` (TinyUSB's is weak), so the firmware cannot define its own: it would not link. On `LoEj = 1, Start = 0` it calls `msc_storage_mount_to_app()`, which mounts the volume for the app and fires the storage event callback with `TINYUSB_MSC_EVENT_MOUNT_COMPLETE` and `mount_point == TINYUSB_MSC_STORAGE_MOUNT_APP` (or `MOUNT_FAILED` / `FORMAT_REQUIRED` if the FAT does not mount). `ptt_msc.c` treats any of these as the eject. The callback runs in the TinyUSB task inside the SCSI command, before the status phase, so it only posts an event; the config task waits 200 ms and restarts. After the hand-back, `tud_msc_test_unit_ready_cb` reports "medium not present", so the host sees the drive gone. TinyUSB reports the LUN as removable (`is_removable = 1` in the INQUIRY response), which is what makes a host send START STOP UNIT on eject. **Whether macOS Finder actually sends it still needs the hardware test** (acceptance test 2). If it does not, holding BOOT after ejecting is the exit, and the README already says so as the fallback.
+
+**Auto-remount.** `auto_mount_off` must stay 0: with it set, `msc_storage_mount_to_app()` does nothing on eject and no event fires. The same hand-back also runs from `tud_umount_cb` (host deconfigures or the bus detaches), which then also restarts into `NORMAL`; that is the right outcome. No race with the restart: the remount completes synchronously in the TinyUSB task before the event is posted, and it only reads the volume, provided it cannot format. So `CONFIG` mode creates the storage with `fat_fs.do_not_format = true`. Without that, a FAT the host left unmountable would be reformatted on eject, losing the user's file. Host writes are deferred to the TinyUSB task (`usbd_defer_func`) but queued ahead of the next SCSI command, so they are on flash before START STOP UNIT is handled.
+
+**Restart.** On the ESP32-S2, `esp_restart()` ends in `esp_rom_software_reset_cpu()`. That is a CPU reset: strapping pins are not re-sampled, so restarting while BOOT is still held does not enter download mode. It also does not reset the USB peripheral (`esp_system_reset_modules_on_exit()` skips it), so `ptt_mode.c` calls `tud_disconnect()` and waits 100 ms before restarting, so the host sees the device leave. The config flag is only honoured when `esp_reset_reason() == ESP_RST_SW`, which covers random RTC contents after power-on and panics.
+
+**FAT size.** `CONFIG_WL_SECTOR_SIZE` is 4096 by default, and `tinyusb_msc_new_storage_spiflash()` refuses to start unless `CONFIG_TINYUSB_MSC_BUFSIZE` (512 by default on the S2) is at least that size, so `sdkconfig.defaults` sets it to 4096. The host sees 4096-byte blocks. Wear levelling on 1 MB (256 sectors) keeps 2 × 2 state sectors (256 position records of 16 bytes do not fit one sector), 1 config sector and 1 spare sector, which leaves 250 sectors (1000 KB). The IDF formatter makes FAT12 with 4 KB clusters, 1 reserved sector, 2 FATs of 1 sector each and FatFs's default 512 root entries (4 sectors; IDF only shrinks that below 128 sectors), so about 243 clusters (972 KB) are free. **The Finder free-space value is not checked yet** (hardware).
+
+**Volume label.** `f_setlabel()` needs `CONFIG_FATFS_USE_LABEL=y` (set in `sdkconfig.defaults`). The label is written only when the firmware formats the volume, so a user rename survives.
+
+**Formatting in NORMAL mode** uses `esp_vfs_fat_spiflash_mount_rw_wl()` without MSC installed. A failed FAT mount leaves the wear-levelling layer mounted, so the firmware unmounts it before mounting again with `format_if_mount_failed`. If that also fails, it erases the partition and tries once more.
+
+**Keyboard Setup Assistant** after leaving config mode: not checked yet (hardware). The keyboard's VID/PID/serial are the same as before, and the drive uses its own PID.
+
+**Deviations from the text above**, all small:
+- A deleted `CONFIG.TXT` is regenerated and parses cleanly, so it does not trigger the 3-blink pattern. `STATUS.TXT` says `CONFIG.TXT: was missing, default written`. Acceptance test 4 lists the deleted file among the cases that blink; section 7.3 defines the blink as "had an error". This follows 7.3.
+- An invalid `max_hold_s` is a warning, not an error: it falls back to its default and does not blink, since the chord still applies.
+- A line without `=` and a duplicate setting are warnings (first one wins). A file with control characters (binary junk) is an error.
+- `PTT_USB_PRODUCT` is limited to 24 characters, so that `"<product> Config"` fits esp_tinyusb's 31-character string limit.
+
+## 13. Implementation status (2026-10-28)
+
+Done:
+- All files in section 8. Production and debug builds have zero warnings on IDF 5.5.4. App is 0x3EB10 bytes (24% of the 1 MB partition).
+- Host tests: `make -C test`, 658 checks pass (acceptance test 10). They cover the chord grammar, every usage ID round-tripping through format and parse, the bad files from acceptance test 4, `STATUS.TXT` text, and the default file parsing with no warnings (acceptance test 3).
+- Section 12 items checked in the source, except the ones marked as needing hardware.
+- README updated. `firmware/onebutton-f13-esp32-s2.bin` rebuilt from this code (untested).
+
+Next, on hardware (in this order):
+1. `erase_flash`, flash the image: keyboard sends F13; hold BOOT 1 s: drive `ONEBUTTON` appears with `CONFIG.TXT` and `STATUS.TXT` (`config: OK`). Note the free space Finder shows. (Acceptance 1)
+2. Edit the chord, save, eject in Finder. Does the keyboard come back within 3 s? This answers whether macOS sends START STOP UNIT. If not, BOOT after eject is the exit (README already covers it). (Acceptance 2)
+3. Watch for the Keyboard Setup Assistant after returning from the drive.
+4. Acceptance tests 4 to 9.
+5. If everything passes: merge into `main`, tag `v2.0`. If something fails, debug with the UART build (README, Debug logging).

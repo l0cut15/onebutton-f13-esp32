@@ -6,3 +6,6 @@ sdkconfig.old
 sdkconfig.dbg
 sdkconfig.dbg.old
 .DS_Store
+test/test_cfgfile
+test/test_cfgfile.dSYM/
+.cache/

@@ -7,12 +7,24 @@ CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 # 1 ms tick so the ms-level debounce and chord delays are exact
 CONFIG_FREERTOS_HZ=1000
 
-# TinyUSB: one HID interface, nothing else. USB is owned by this firmware.
+# 1 MB app + 1 MB FAT "storage" for CONFIG.TXT (partitions.csv)
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# TinyUSB: HID in normal mode, MSC in config mode, never both. USB is owned by this firmware.
 CONFIG_TINYUSB_HID_COUNT=1
 CONFIG_TINYUSB_CDC_ENABLED=n
-CONFIG_TINYUSB_MSC_ENABLED=n
+CONFIG_TINYUSB_MSC_ENABLED=y
+# Must hold one wear-levelling sector (CONFIG_WL_SECTOR_SIZE, 4096 by default)
+CONFIG_TINYUSB_MSC_BUFSIZE=4096
 CONFIG_TINYUSB_SUSPEND_CALLBACK=y
 CONFIG_TINYUSB_RESUME_CALLBACK=y
+
+# FAT: 8.3 names are enough (CONFIG.TXT, STATUS.TXT); labels for "ONEBUTTON"
+CONFIG_FATFS_USE_LABEL=y
+
+# The main task mounts FAT and formats CONFIG.TXT/STATUS.TXT before USB starts
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
 
 # No console at all in production
 CONFIG_ESP_CONSOLE_NONE=y
