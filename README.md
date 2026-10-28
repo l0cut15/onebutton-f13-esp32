@@ -7,6 +7,7 @@ When it is released, the chord is released. There is no driver and no host softw
 It works with any app that has a push-to-talk or "hold to record" shortcut.
 
 - Firmware: ESP-IDF 5.5.4, C, `espressif/esp_tinyusb` 2.4.0
+- Prebuilt firmware: [firmware/onebutton-esp32-s2-mini.bin](firmware/onebutton-esp32-s2-mini.bin) ([flash it without ESP-IDF](#flash-the-prebuilt-firmware))
 - Case: 3D printed, four parts, no screws ([details](#case))
 - Design notes: [SPEC.md](SPEC.md) (firmware), [_Case/OneButton_design_spec.md](_Case/OneButton_design_spec.md) (case)
 
@@ -42,7 +43,29 @@ The internal pull-up is used, so no resistor is needed. GPIO17 sits next to a GN
 wires short. To use a different pin, change **Button GPIO** in `idf.py menuconfig` → **PTT Controller**.
 Pins that cannot work (GPIO0, the USB pins 19/20, the flash pins 26–32) are rejected at build time.
 
-## Build and flash
+## Flash the prebuilt firmware
+
+[firmware/onebutton-esp32-s2-mini.bin](firmware/onebutton-esp32-s2-mini.bin) is a ready-made image
+with the default settings: button on **GPIO17**, LED on GPIO15, chord **Left Ctrl + `**. It is a single
+merged file (bootloader, partition table and app) written at offset **0x0**. No ESP-IDF install is
+needed.
+
+1. Put the board in download mode: hold **0**, tap **RST**, release **0**.
+2. Open the [Espressif web flasher](https://espressif.github.io/esptool-js/) in Chrome or Edge
+   (it needs Web Serial, which Safari and Firefox do not support).
+3. Click **Connect** and pick the board's serial port.
+4. Set **Flash Address** to `0x0`, choose `onebutton-esp32-s2-mini.bin`, and click **Program**.
+5. When it finishes, tap **RST**. The board restarts as a keyboard named "PTT Button".
+
+Or from a terminal, with Python's esptool (`pip install esptool`):
+
+```bash
+esptool.py --chip esp32s2 write_flash 0x0 firmware/onebutton-esp32-s2-mini.bin
+```
+
+To change the button pin or the chord, build from source instead.
+
+## Build and flash from source
 
 ```bash
 . ~/esp/esp-idf-v5.5.4/export.sh
