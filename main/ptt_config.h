@@ -1,7 +1,7 @@
 /*
  * Push-to-talk chord. Edit and rebuild to apply.
  *
- * Timing, GPIOs and USB identity live in Kconfig: `idf.py menuconfig` -> "PTT Controller".
+ * Timing, GPIOs and USB identity live in Kconfig: `idf.py menuconfig` -> "OneButton".
  */
 #pragma once
 

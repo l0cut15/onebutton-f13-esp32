@@ -37,7 +37,7 @@ This is **hold semantics, not tap**. The chord must stay asserted for the full d
 
 Compile-time validation: at most 6 keys, no modifier usage IDs (0xE0 to 0xE7) in `PTT_KEYS`, at least one modifier or key set. Fail the build with `static_assert` and a readable message otherwise.
 
-### 4.2 Timing and behavior: Kconfig (`menuconfig` under "PTT Controller")
+### 4.2 Timing and behavior: Kconfig (`menuconfig` under "OneButton")
 
 | Symbol | Default | Meaning |
 |---|---|---|

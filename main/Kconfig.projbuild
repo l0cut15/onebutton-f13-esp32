@@ -1,4 +1,4 @@
-menu "PTT Controller"
+menu "OneButton"
 
     menu "Hardware"
         config PTT_BUTTON_GPIO

@@ -5,8 +5,8 @@ keyboard. While the button is **held**, F13 is held down; when it is released, F
 is no driver and no host software to install.
 
 Mac keyboards have no F13 key and macOS binds nothing to it, so it never clashes with an existing
-shortcut. Bind it to anything that accepts a shortcut, for example push-to-talk or "hold to record"
-in a dictation or voice chat app. The key can be changed to any other key or chord.
+shortcut. Bind it to anything that accepts a keyboard shortcut. The key can be changed to any other
+key or key combination.
 
 - Firmware: ESP-IDF 5.5.4, C, `espressif/esp_tinyusb` 2.4.0
 - Prebuilt firmware: [firmware/onebutton-f13-esp32-s2.bin](firmware/onebutton-f13-esp32-s2.bin) ([flash it without ESP-IDF](#flash-the-prebuilt-firmware))
@@ -42,7 +42,7 @@ in a dictation or voice chat app. The key can be changed to any other key or cho
 ```
 
 The internal pull-up is used, so no resistor is needed. GPIO17 sits next to a GND pad, which keeps the
-wires short. To use a different pin, change **Button GPIO** in `idf.py menuconfig` → **PTT Controller**.
+wires short. To use a different pin, change **Button GPIO** in `idf.py menuconfig` → **OneButton**.
 Pins that cannot work (GPIO0, the USB pins 19/20, the flash pins 26–32) are rejected at build time.
 
 ## Flash the prebuilt firmware
@@ -93,7 +93,7 @@ on the other side, so the case does not need to be opened.
 
 1. Plug in the button.
 2. In the app's settings, click the shortcut field, then **press the button**. The app records F13.
-3. For push-to-talk, set the app to **hold** mode (active while held), not toggle.
+3. If the app offers hold or toggle, pick **hold** to keep it active only while the button is down.
 
 The first time it is plugged in, macOS may open **Keyboard Setup Assistant**. Close it; macOS
 remembers the device after that.
@@ -112,7 +112,7 @@ Edit `main/ptt_config.h`, then rebuild and flash. The default is F13 with no mod
 - `PTT_KEYS`: up to 6 keys, listed first and padded with `0`. Names are TinyUSB's `HID_KEY_*`
   constants (`class/hid/hid.h`), e.g. `HID_KEY_SPACE`, `HID_KEY_F13` … `HID_KEY_F24`.
 
-The build stops with a clear message if the chord is invalid.
+The build stops with a clear message if the combination is invalid.
 
 ```c
 // Left Ctrl + ` (grave)
@@ -125,7 +125,7 @@ The build stops with a clear message if the chord is invalid.
 ```
 
 Other settings (button and LED pins, debounce, maximum hold time, USB names and IDs) are in
-`idf.py menuconfig` → **PTT Controller**.
+`idf.py menuconfig` → **OneButton**.
 
 ## Case
 
@@ -167,10 +167,10 @@ idf.py -B build-debug -D SDKCONFIG=sdkconfig.dbg \
 ## How it works
 
 The firmware presses the key when the button goes down and releases it when the button comes up. If
-the chord includes a modifier, the modifier is pressed a few milliseconds before the key and released a
-few milliseconds after it, the way a person would type it. The key is also released if the USB host
-disconnects or sleeps, or after a maximum hold time (120 s by default), so it can never get stuck down. The button is debounced in software. See [SPEC.md](SPEC.md) for the
-full design.
+a modifier is configured, it is pressed a few milliseconds before the key and released a few
+milliseconds after it, the way a person would type it. The key is also released if the USB host
+disconnects or sleeps, or after a maximum hold time (120 s by default), so it can never get stuck down.
+The button is debounced in software. See [SPEC.md](SPEC.md) for the full design.
 
 ## License
 
