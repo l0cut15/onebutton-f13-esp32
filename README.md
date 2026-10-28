@@ -13,6 +13,8 @@ key or key combination.
 - Case: 3D printed, four parts, no screws ([details](#case))
 - Design notes: [SPEC.md](SPEC.md) (firmware), [_Case/OneButton_design_spec.md](_Case/OneButton_design_spec.md) (case)
 
+![OneButton F13 in its 3D printed case](_photo/case.jpeg)
+
 ## Parts
 
 - Lolin/Wemos S2 mini (ESP32-S2)
@@ -66,6 +68,8 @@ esptool.py --chip esp32s2 write_flash 0x0 firmware/onebutton-f13-esp32-s2.bin
 ```
 
 To change the button pin or the key, build from source instead.
+
+![Lolin S2 mini wired to the switch](_photo/board.jpeg)
 
 ## Build and flash from source
 
@@ -146,6 +150,8 @@ keycap top down, shroud top face down.
 1. Solder about 15 mm of wire (plus slack) from each switch pin to the board's GPIO17 and GND pads.
 2. Press the switch into the top of the shell.
 3. Place the board components-down onto the two pegs inside the shell, USB-C towards the opening.
+   The pegs pass through the board's mount holes and stand about 3 mm proud: heat-stake them with a
+   hot tool (soldering iron) to hold the board.
 4. Snap the bottom cap in. To remove it later, press a latch in through its side window.
 5. Glue the shroud onto the top using its four pegs, then fit the keycap.
 

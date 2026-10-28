@@ -1,4 +1,4 @@
-# OneButton case: Fusion 360 build script (v0.11 geometry, spec section numbers refer to OneButton_design_spec.md)
+# OneButton case: Fusion 360 build script (v0.8 geometry, spec section numbers refer to OneButton_design_spec.md)
 # Run in Fusion (Utilities > Scripts, or via the Fusion MCP "script" tool) in an EMPTY parametric design.
 # Spec axes: Z up, +Y towards the antenna end, USB-C at -Y, BOOT on -X, RST on +X.
 # Fusion is Y-up, so spec (x, y, z) -> Fusion (x, z, -y). All values below are spec mm.
@@ -24,7 +24,7 @@ CAV_W, CAV_L, R_CAV = 26.0, 35.0, 1.5
 SW_CUT, SW_RELIEF = 14.0, 16.0
 PEG_XY = (10.2, 13.85)            # board mount holes (+/-x, y); a second pair of plain posts sits at y = -13.85
 POST_D, POST_BOT = 4.0, -10.3
-PEG_D, PEG_BOT = 1.8, -11.5
+PEG_D, PEG_BOT = 1.8, -14.8   # v0.12: pegs go through the board (underside Z -11.8) and stand 3.0 proud, to be heat-staked
 USB_W, USB_Z0, USB_Z1, R_USB = 9.8, -16.2, -10.7, 1.0   # v0.10: 5.5 tall, centred on the connector (Z -13.45), was Z -15.5..-11.4
 BOOT_Y, BOOT_HALF, BOOT_Z0, BOOT_Z1, R_BOOT = -13.75, 3.25, -15.2, -11.6, 0.5
 RST_Z, RST_D = -13.3, 2.0
@@ -227,9 +227,7 @@ def run(context):
     s = S('XZ', Z_BOT, 'sk_BOTTOM_CAP'); s.crect(CAP_W, CAP_L, R_CAP)
     cap = new_body(ext(s, s.sk.profiles.item(0), UP, CAP_T, NB, 'BOTTOM_CAP'), 'BOTTOM_CAP')
     CP = [cap]
-    s = S('XZ', Z_BOT + CAP_T, 'sk_cap_bosses')
-    for sx in (-1, 1): s.circle(sx * PEG_XY[0], PEG_XY[1], POST_D)
-    ext(s, s.all_profiles(), UP, CAP_BOSS_TOP - (Z_BOT + CAP_T), J, 'cap_bosses', CP)
+    # v0.12: no cap bosses. The pegs now stand 3.0 below the board and are heat-staked, so the cap must stay clear of them.
     s = S('XZ', Z_BOT + CAP_T, 'sk_cap_usb_relief'); s.rect(-5.0, -17.5, 5.0, -9.5)
     ext(s, s.sk.profiles.item(0), DN, 0.4, C, 'cap_usb_relief', CP)
     s = S('XZ', Z_BOT, 'sk_cap_latch_slots')
