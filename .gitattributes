@@ -1,0 +1,8 @@
+# Left out of release archives (GitHub source zip/tarball, git archive).
+# Design and test material for developers; everything needed to build, flash
+# and print the device stays in.
+SPEC.md                                     export-ignore
+SPEC_v2.md                                  export-ignore
+test/                                       export-ignore
+_Case/OneButton_design_spec_v0.8_history.md export-ignore
+.gitattributes                              export-ignore
