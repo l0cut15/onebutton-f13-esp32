@@ -19,7 +19,7 @@ This is **hold semantics, not tap**. The chord must stay asserted for the full d
 
 | Item | Default | Notes |
 |---|---|---|
-| Button GPIO | GPIO5 | Kconfig `PTT_BUTTON_GPIO` |
+| Button GPIO | GPIO17 | Kconfig `PTT_BUTTON_GPIO` |
 | Wiring | GPIO to GND, internal pull-up | Active low, Kconfig `PTT_BUTTON_ACTIVE_LOW` |
 | Status LED | GPIO15 (onboard) | Kconfig `PTT_LED_GPIO`, set -1 to disable |
 | Do not use | GPIO19, GPIO20 (USB), GPIO0 (boot strap) | Enforce with a Kconfig range or `static_assert` |

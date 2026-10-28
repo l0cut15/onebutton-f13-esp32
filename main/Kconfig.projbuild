@@ -4,7 +4,7 @@ menu "PTT Controller"
         config PTT_BUTTON_GPIO
             int "Button GPIO"
             range 1 46
-            default 5
+            default 17
             help
                 GPIO the push-to-talk button is wired to. GPIO0 (boot strap),
                 GPIO19/20 (USB D-/D+) and GPIO26-32 (in-package flash/PSRAM)
