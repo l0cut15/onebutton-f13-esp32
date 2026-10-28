@@ -9,3 +9,6 @@ sdkconfig.dbg.old
 test/test_cfgfile
 test/test_cfgfile.dSYM/
 .cache/
+
+# Specs: kept locally, not tracked
+SPEC*.md
