@@ -10,7 +10,7 @@ key or key combination by editing a text file on the device: hold **BOOT** and i
 small USB drive ([details](#changing-the-key)).
 
 - Firmware: ESP-IDF 5.5.4, C, `espressif/esp_tinyusb` 2.4.0
-- Prebuilt firmware: [firmware/onebutton-f13-esp32-s2.bin](firmware/onebutton-f13-esp32-s2.bin) ([flash it without ESP-IDF](#flash-the-prebuilt-firmware))
+- Prebuilt firmware 2.0.0: [firmware/onebutton-f13-esp32-s2.bin](firmware/onebutton-f13-esp32-s2.bin) ([flash it without ESP-IDF](#flash-the-prebuilt-firmware))
 - Case: 3D printed, four parts, no screws ([details](#case))
 - Design notes: [SPEC.md](SPEC.md) and [SPEC_v2.md](SPEC_v2.md) (firmware), [_Case/OneButton_design_spec.md](_Case/OneButton_design_spec.md) (case)
 
@@ -51,15 +51,16 @@ Pins that cannot work (GPIO0, the USB pins 19/20, the flash pins 26–32) are re
 ## Flash the prebuilt firmware
 
 [firmware/onebutton-f13-esp32-s2.bin](firmware/onebutton-f13-esp32-s2.bin) is a ready-made image
-with the default settings: button on **GPIO17**, LED on GPIO15, key **F13**. It is a single
-merged file (bootloader, partition table and app) written at offset **0x0**. No ESP-IDF install is
-needed.
+of firmware 2.0.0 with the default settings: button on **GPIO17**, LED on GPIO15, config drive on
+**BOOT**, key **F13**. It is a single merged file (bootloader, partition table and app) written at
+offset **0x0**. No ESP-IDF install is needed.
 
 1. Put the board in download mode: hold **0**, tap **RST**, release **0**.
 2. Open the [Espressif web flasher](https://espressif.github.io/esptool-js/) in Chrome or Edge
    (it needs Web Serial, which Safari and Firefox do not support).
 3. Click **Connect** and pick the board's serial port.
 4. Set **Flash Address** to `0x0`, choose `onebutton-f13-esp32-s2.bin`, and click **Program**.
+   Do not click **Erase Flash**: it also erases your settings.
 5. When it finishes, tap **RST**. The board restarts as a keyboard named "OneButton F13".
 
 Or from a terminal, with Python's esptool (`pip install esptool`):
@@ -72,7 +73,12 @@ The key can be changed afterwards without rebuilding ([Changing the key](#changi
 change the button pin, build from source.
 
 Reflashing the image keeps your settings: they live in a separate `storage` partition that the image
-does not cover. `esptool.py erase_flash` wipes them, and the next boot writes a default `CONFIG.TXT`.
+does not cover. `esptool.py erase_flash` (or **Erase Flash** in the web flasher) wipes them, and the
+next boot writes a default `CONFIG.TXT`.
+
+Upgrading from 1.x needs nothing special: flash the image the same way. The first start formats the
+`storage` partition and writes a default `CONFIG.TXT` with F13. A chord set in `ptt_config.h` for a
+1.x build is not carried over; set it again in `CONFIG.TXT`.
 
 ![Lolin S2 mini wired to the switch](_photo/board.jpeg)
 
@@ -118,11 +124,11 @@ remembers the device after that.
    chord = ctrl+shift+F15
    ```
 3. **Eject** the drive (Finder, or drag it to the bin). The device restarts as a keyboard with the
-   new chord within a few seconds.
+   new chord, about a second later.
 
-If ejecting does not bring the keyboard back, hold **BOOT** for a second again, after ejecting.
-Always eject first: otherwise the computer may not have finished writing the file. Unplugging also
-works, with the same caveat. The next power-up is always a keyboard.
+Holding **BOOT** for a second also switches back to the keyboard. Eject first even then: otherwise
+the computer may not have finished writing the file. Unplugging also works, with the same caveat.
+The next power-up is always a keyboard.
 
 `STATUS.TXT` on the drive shows what the device made of the file:
 
