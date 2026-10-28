@@ -7,6 +7,7 @@ releases the chord. No driver and no host software are needed.
 - ESP-IDF **5.5.4**, C
 - `espressif/esp_tinyusb` **==2.4.0** (pinned in `main/idf_component.yml`; pulls `espressif/tinyusb` 0.21.0~2)
 - Full design: [SPEC.md](SPEC.md)
+- 3D printed case: [_Case/](_Case/) (see [Case](#case))
 
 ## Wiring
 
@@ -15,7 +16,7 @@ releases the chord. No driver and no host software are needed.
          +-------------------+
          |  [0]       [RST]  |   <- onboard buttons (used for recovery)
          |                   |
-         |  GPIO5  o---------+------.
+         |  GPIO17 o---------+------.
          |                   |      |
          |                   |    --+--   momentary push button
          |                   |    --+--   (normally open)
@@ -32,6 +33,38 @@ releases the chord. No driver and no host software are needed.
 The internal pull-up is used, so the button is active low and needs no resistor.
 Do not use GPIO0 (boot strap), GPIO19/20 (USB) or GPIO26–32 (in-package flash/PSRAM). The build
 rejects them with a `static_assert`.
+
+## Case
+
+A four-part, screwless, 3D printed case for the S2 mini and a Kailh Box Navy (MX compatible) switch
+lives in [_Case/](_Case/). It is about 30 x 39 x 30 mm with the keycap fitted.
+[_Case/OneButton_design_spec.md](_Case/OneButton_design_spec.md) is the full spec: every dimension,
+fit, print orientation and open item, with enough detail to rebuild the model in any CAD tool.
+
+| Part | File | What it does |
+|---|---|---|
+| Case shell | `OneButton_CASE_SHELL.stl` | Body with the switch seat, board posts and pegs, USB-C opening, BOOT window and RST hole |
+| Bottom cap | `OneButton_BOTTOM_CAP.stl` | Floor with board bosses and four snap arms that latch into windows in the shell |
+| Keycap | `OneButton_KEYCAP.stl` | 24.3 mm square cap with an MX cross socket |
+| Shroud | `OneButton_SHROUD.stl` | Tapered bezel whose bore guides the keycap so it does not rock. Glued to the shell with four pegs |
+
+- **Hardware**: the board sits components-down under the switch. The switch is wired to **GPIO17**
+  and **GND** with two short flexible wires (about 15 mm plus slack), soldered to the switch pins and
+  board pads before the board goes in.
+- **Flashing**: BOOT (0) and RST stay reachable through a window and a hole in the side walls, so the
+  case does not have to be opened to reflash.
+- **Printing**: PLA, 0.4 mm nozzle, 0.2 mm layers, 3+ perimeters, 15–20% infill, no supports. The STLs
+  are exported in design orientation (Y-up from Fusion), so lay them flat in the slicer: shell top face
+  down, cap floor down, keycap plate down, shroud top face down. Print order: keycap, bottom cap, shell,
+  shroud.
+- **Assembly**: solder the wires, seat the switch in the shell, drop the board onto the pegs, snap the
+  bottom cap in, glue the shroud on, fit the keycap. To open, press a hook in through its latch window.
+- **Rebuilding the model**: `_Case/onebutton_build.py` is a Fusion 360 script that builds all four
+  bodies (plus reference bodies for the board and switch) from the parameters at its top, runs an
+  interference check, and can export the STLs (`EXPORT_DIR`). Run it in an empty parametric design.
+  Change `LOG_PATH` first: it points at a local path.
+- **Status**: prototype (spec v0.11). Unverified on real parts: switch travel against the keycap
+  sleeve, peg and keycap fits, snap-arm strength in PLA. See section 7 of the spec.
 
 ## Build
 
